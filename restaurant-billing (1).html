@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restaurant Billing</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1rem; background: #f9f9f9; }
+    h2 { background: #444; color: #fff; padding: 0.5rem; border-radius: 5px; }
+    .category { margin-top: 1rem; }
+    .item { display: flex; justify-content: space-between; margin: 0.3rem 0; }
+    .item input { width: 60px; }
+    #bill { margin-top: 2rem; }
+    .button { margin: 1rem 0; padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 5px; }
+    textarea { width: 100%; height: 100px; }
+  </style>
+</head>
+<body>
+  <h2>Restaurant Billing</h2>
+
+  <label>Customer/Table: <input type="text" id="customerName" /></label>
+
+  <div id="menu"></div>
+
+  <div id="bill">
+    <h2>Bill Summary</h2>
+    <textarea id="billOutput" readonly></textarea>
+    <button class="button" onclick="saveBill()">Save Bill</button>
+    <div id="savedBills"></div>
+  </div>
+
+  <script>
+    const menu = {
+      'Breakfast': {
+        'मिसळ पाव': 50, 'दही मिसळ': 60, 'वडा सांबर': 50, 'वडापाव': 15, 'कांदा भजी': 30,
+        'बटाटा भजी': 30, 'पावभाजी': 50, 'बटर पावभाजी': 60, 'चीज पावभाजी': 65,
+        'कुर्मा पुरी': 50, 'पुरी भाजी': 50, 'पोहे': 30, 'उपिट': 30
+      },
+      'Beverages': {
+        'चहा': 10, 'स्पेशल चहा': 20, 'कॉफी': 20, 'कोकम सरबत': 15, 'सोलकढी': 30
+      },
+      'Appetizer': {
+        'French fries': 60, 'Momos': 60, 'Paneer momos': 70,
+        'Cheese corn momos': 70, 'Spring rolls': 100, 'Sandwich': 50,
+        'Cheese sandwich': 60, 'Plain maggie': 30, 'Vegitable maggie': 40
+      },
+      'Extras': {
+        'पाव': 5, 'बटर पाव': 10, 'भाजी (पावभाजी)': 30
+      }
+    };
+
+    const menuDiv = document.getElementById('menu');
+
+    for (let category in menu) {
+      const catDiv = document.createElement('div');
+      catDiv.className = 'category';
+      catDiv.innerHTML = `<h3>${category}</h3>`;
+      for (let item in menu[category]) {
+        const price = menu[category][item];
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML = `<span>${item} - ₹${price}</span><input type="number" min="0" value="0" data-name="${item}" data-price="${price}" />`;
+        catDiv.appendChild(row);
+      }
+      menuDiv.appendChild(catDiv);
+    }
+
+    function saveBill() {
+      const inputs = document.querySelectorAll('input[type=number]');
+      const name = document.getElementById('customerName').value || 'Unknown';
+      let total = 0;
+      let text = `Customer/Table: ${name}
+
+`;
+
+      inputs.forEach(input => {
+        const qty = parseInt(input.value);
+        if (qty > 0) {
+          const item = input.dataset.name;
+          const price = parseInt(input.dataset.price);
+          const cost = price * qty;
+          total += cost;
+          text += `${item} x ${qty} = ₹${cost}
+`;
+        }
+      });
+
+      text += `
+Total: ₹${total}`;
+      document.getElementById('billOutput').value = text;
+
+      const previous = JSON.parse(localStorage.getItem('savedBills') || '[]');
+      previous.push(text);
+      localStorage.setItem('savedBills', JSON.stringify(previous));
+
+      showSavedBills();
+    }
+
+    function showSavedBills() {
+      const list = document.getElementById('savedBills');
+      list.innerHTML = '<h3>Saved Bills:</h3>';
+      const bills = JSON.parse(localStorage.getItem('savedBills') || '[]');
+      bills.slice().reverse().forEach((bill, index) => {
+        const p = document.createElement('pre');
+        p.textContent = bill;
+        p.style.background = '#fff';
+        p.style.border = '1px solid #ccc';
+        p.style.padding = '0.5rem';
+        list.appendChild(p);
+      });
+    }
+
+    showSavedBills();
+  </script>
+</body>
+</html>
